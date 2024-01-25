@@ -54,6 +54,12 @@ function createGram(A)
 	return Gram;
 end function;
 
+function positiveDefinite(A)
+	Gram := createGram(A);
+	return IsPositiveDefinite(Gram);
+end function;
+
+
 //Minima and minimal vectors
 function minimalVectors(A)
 	Gram := createGram(A);
