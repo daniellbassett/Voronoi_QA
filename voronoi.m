@@ -70,6 +70,8 @@ function neighbour(perfectForm, facet) //finds the perfect form sharing facet wi
 				if positiveDefinite(perfectForm + rho * orthoForm) then
 					l := perfectForm + rho * orthoForm;
 					found := true;
+					
+					break;
 				end if;
 			end if;
 		end for;
@@ -120,6 +122,7 @@ function equivalent(form1, form2)
 			end for;
 			
 			mat1 := Transpose(matricesB ! [Transpose(minVecs1[i1]), Transpose(minVecs1[j1])]);
+			mat1Inv := mat1^-1;
 			
 			//Now find linear map taking them to each pair of minimal vectors of form2; if form1 and form2 are equivalent, it must be under a map of this form
 			for i in [1..#minVecs2] do
@@ -128,7 +131,7 @@ function equivalent(form1, form2)
 					if toHermitian(minVecs2[i]) ne toHermitian(minVecs2[j]) then
 						//Create linear map
 						mat2 := Transpose(matricesB ! [Transpose(minVecs2[i]), Transpose(minVecs2[j])]);
-						mat := mat2 * mat1^-1;
+						mat := mat2 * mat1Inv;
 						
 						det := Determinant(mat);
 						if det ne 0 then
