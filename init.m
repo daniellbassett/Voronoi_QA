@@ -16,22 +16,7 @@ O := MaximalOrder(B);
 
 //Basis for order
 orderBasis := Basis(O);
-orderBasisCoordinates := Transpose(MatrixRing(B,4) ! [Coordinates(orderBasis[i]) : i in [1..4]]);
 matricesB := MatrixRing(B, n);
-
-//Check elements of B for membership in O
-function inO(x)
-	standardCoords := RMatrixSpace(B,4,1) ! Coordinates(x);
-	orderCoords := orderBasisCoordinates^-1 * standardCoords;
-	
-	for i in [1..4] do
-		if Denominator(orderCoords[i][1]) gt 1 then
-			return false;
-		end if;
-	end for;
-	
-	return true;
-end function;
 
 //Create basis for O^n from a basis for O, as a list of vectors
 latticeBasis := [RMatrixSpace(B, n, 1) ! 0 : i in [1..4*n]];
