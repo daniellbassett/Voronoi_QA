@@ -59,6 +59,7 @@ function neighbour(perfectForm, facet) //finds the perfect form sharing facet wi
 	//First find an element l of S = {x in O^n : perfectForm + rho(x) * orthoForm positive definite; <orthoForm, x> < 0} (see Gunnells '99)
 	searchSize := 1;
 	found := false;
+	
 	while not found do
 		addVecs := getVectorsSizeRange(perfectForm, searchSize, searchSize+1);
 		
@@ -70,7 +71,6 @@ function neighbour(perfectForm, facet) //finds the perfect form sharing facet wi
 				if positiveDefinite(perfectForm + rho * orthoForm) then
 					l := perfectForm + rho * orthoForm;
 					found := true;
-					
 					break;
 				end if;
 			end if;
@@ -131,10 +131,10 @@ function equivalent(form1, form2)
 					if toHermitian(minVecs2[i]) ne toHermitian(minVecs2[j]) then
 						//Create linear map
 						mat2 := Transpose(matricesB ! [Transpose(minVecs2[i]), Transpose(minVecs2[j])]);
-						mat := mat2 * mat1Inv;
+						det := Determinant(mat2);
 						
-						det := Determinant(mat);
 						if det ne 0 then
+							mat := mat2 * mat1Inv;
 							//Is it defined over O
 							overO := true;
 							
