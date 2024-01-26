@@ -1,5 +1,5 @@
 import "init.m" : matricesB, Dagger, n, O;
-import "symmetricSpace.m" : perpendicularForm, minimalVectors, positiveDefinite, getVectorsSizeRange, evaluateHermitian, perfectionRank, toHermitians, createGram;
+import "symmetricSpace.m" : perpendicularForm, minimalVectors, positiveDefinite, getVectorsSizeRange, evaluateHermitian, perfectionRank, toHermitian, toHermitians, createGram;
 import "polytope.m" : facetsAsForms;
 
 function initialPerfectForm()
@@ -105,7 +105,7 @@ function equivalent(form1, form2)
 			found1 := false;
 			for i in [1..#minVecs1] do
 				for j in [i+1..#minVecs1] do
-					if toHermitians([minVecs1[i]]) ne toHermitians([minVecs1[j]]) then
+					if toHermitian(minVecs1[i]) ne toHermitian(minVecs1[j]) then
 						found1 := true;
 						
 						i1 := i;
@@ -125,7 +125,7 @@ function equivalent(form1, form2)
 			for i in [1..#minVecs2] do
 				for j in [1..#minVecs2] do //Need to go from 1 instead of i+1 since the linear map may not preserve the ordering of the vertices
 					//Check the minimal vectors of form 2 are also independent
-					if toHermitians([minVecs2[i]]) ne toHermitians([minVecs2[j]]) then
+					if toHermitian(minVecs2[i]) ne toHermitian(minVecs2[j]) then
 						//Create linear map
 						mat2 := Transpose(matricesB ! [Transpose(minVecs2[i]), Transpose(minVecs2[j])]);
 						mat := mat2 * mat1^-1;

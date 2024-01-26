@@ -7,6 +7,10 @@ function innerProduct(A,B)
 end function;
 
 //Embeds O^n vectors in Herm_n
+function toHermitian(A)
+	return A*Dagger(A);
+end function;
+
 function toHermitians(S)
 	forms := [];
 	for i in [1..#S] do
