@@ -37,7 +37,7 @@ function evaluateHermitian(A, v) //Evaluates Hermitian form A on vector v
 end function;
 
 function evaluateBilinear(A, v, w) //Evaluates the corresponding real bilinear form on vectors v,w
-	return (evaluateHermitian(A, v+w) - evaluateHermitian(A, v) - evaluateHermitian(A, w))/2;
+	return Trace(Trace(A*(v*Dagger(w) + w*Dagger(v))))/2;
 end function;
 
 //Gram matrix
