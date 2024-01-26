@@ -45,7 +45,9 @@ function createGram(A)
 	Gram := MatrixRing(Rationals(), #latticeBasis) ! 0; //Rationals() instead of the number field version allows use of lattice reduction routines, since it is considered as a subfield of the reals
 	
 	for i in [1..#latticeBasis] do
-		for j in [i..#latticeBasis] do
+		Gram[i][i] := evaluateHermitian(A, latticeBasis[i]);
+		
+		for j in [i+1..#latticeBasis] do
 			Gram[i][j] := evaluateBilinear(A, latticeBasis[i], latticeBasis[j]);
 			Gram[j][i] := Gram[i][j];
 		end for;
