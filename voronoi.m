@@ -1,4 +1,4 @@
-import "init.m" : matricesB, Dagger, n, inO;
+import "init.m" : matricesB, Dagger, n, O;
 import "symmetricSpace.m" : perpendicularForm, minimalVectors, positiveDefinite, getVectorsSizeRange, evaluateHermitian, perfectionRank, toHermitians, createGram;
 import "polytope.m" : facetsAsForms;
 
@@ -137,7 +137,7 @@ function equivalent(form1, form2)
 							
 							for k in [1..n] do
 								for l in [1..n] do
-									if not inO(mat[k][l]) then
+									if not mat[k][l] in O then
 										overO := false;
 										break;
 									end if;
@@ -154,7 +154,7 @@ function equivalent(form1, form2)
 								
 								for k in [1..n] do
 									for l in [1..n] do
-										if not inO(matInv[k][l]) then
+										if not matInv[k][l] in O then
 											overO := false;
 											break;
 										end if;
