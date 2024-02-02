@@ -68,3 +68,8 @@ function overO(A)
 	
 	return true;
 end function;
+
+//Dieudonne determinant of 2x2 matrices
+function dieuDet(A)
+	return Norm(A[1][1] * A[2][2]) + Norm(A[1][2]*A[2][1]) - Trace(A[1][1] * Conjugate(A[2][1]) * A[2][2] * Conjugate(A[1][2]));
+end function;

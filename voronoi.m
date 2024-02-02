@@ -131,7 +131,7 @@ function equivalent(form1, form2)
 					if toHermitian(minVecs2[i]) ne toHermitian(minVecs2[j]) then
 						//Create linear map
 						mat2 := Transpose(matricesB ! [Transpose(minVecs2[i]), Transpose(minVecs2[j])]);
-						det := Determinant(mat2);
+						det := dieuDet(mat2);
 						
 						if det ne 0 then
 							mat := mat2 * mat1Inv;
