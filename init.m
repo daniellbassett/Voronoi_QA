@@ -9,8 +9,8 @@ n := 2; //Number of variables
 hermDim := n + 2*n*(n-1);
 
 //Create quaternion algebra B/Q and order O
-a := -1;
-b := -23;
+a := -2;
+b := -5;
 B<i,j,k> := QuaternionAlgebra<Q|a,b>;
 O := MaximalOrder(B); 
 
@@ -55,3 +55,16 @@ for i in [1..n] do
 		end for;
 	end for;
 end for;
+
+//Checks if matrix A is defined over the order O
+function overO(A)
+	for i in [1..NumberOfRows(A)] do
+		for j in [1..NumberOfColumns(A)] do
+			if not A[i][j] in O then
+				return false;
+			end if;
+		end for;
+	end for;
+	
+	return true;
+end function;

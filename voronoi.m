@@ -1,4 +1,4 @@
-import "init.m" : matricesB, Dagger, n, O;
+import "init.m" : matricesB, Dagger, n, overO;
 import "symmetricSpace.m" : perpendicularForm, minimalVectors, positiveDefinite, getVectorsSizeRange, evaluateHermitian, perfectionRank, toHermitian, toHermitians, createGram;
 import "polytope.m" : facetsAsForms;
 
@@ -80,7 +80,7 @@ function neighbour(perfectForm, facet) //finds the perfect form sharing facet wi
 	end while;
 	
 	//Now find the finite set T_l := S intersect {<x, l> <= 1} - minimal vectors are those minimising rho on T_l
-	T := getVectorsSizeRange(l, 0, 1);
+	T := getVectorsSizeRange(l, 0, 1); //Why are we not required to take negatives of vectors here?? something to run tests for correctness on
 	
 	min := Infinity();
 	for i in [1..#T] do
@@ -135,40 +135,10 @@ function equivalent(form1, form2)
 						
 						if det ne 0 then
 							mat := mat2 * mat1Inv;
-							//Is it defined over O
-							overO := true;
-							
-							for k in [1..n] do
-								for l in [1..n] do
-									if not mat[k][l] in O then
-										overO := false;
-										break;
-									end if;
-								end for;
-								
-								if not overO then
-									break;
-								end if;
-							end for;
-							
-							if overO then
+							//Is it defined over O							
+							if overO(mat) then
 								//Is the inverse defined over O
-								matInv := mat^-1;
-								
-								for k in [1..n] do
-									for l in [1..n] do
-										if not matInv[k][l] in O then
-											overO := false;
-											break;
-										end if;
-									end for;
-									
-									if not overO then
-										break;
-									end if;
-								end for;
-								
-								if overO then
+								if overO(mat^-1) then
 									//Does it take form2 to form1 as desired
 									if form1 eq Dagger(mat)*form2*mat then
 										return true;
