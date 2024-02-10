@@ -9,8 +9,8 @@ n := 2; //Number of variables
 hermDim := n + 2*n*(n-1);
 
 //Create quaternion algebra B/Q and order O
-a := -2;
-b := -5;
+a := -3;
+b := -17;
 B<i,j,k> := QuaternionAlgebra<Q|a,b>;
 O := MaximalOrder(B); 
 
@@ -55,6 +55,53 @@ for i in [1..n] do
 		end for;
 	end for;
 end for;
+
+//Centraliser of the embedding as rational matrices, for use in equivalence testing and automorphism group calculations (Coulangeon et. al. Lemma 7.2)
+orderBasisCoordinates := Transpose(MatrixRing(Q,4) ! [Coordinates(orderBasis[i]) : i in [1..4]]);
+
+function leftRegularRep(x) //x acting on the right on B as a Q-vector space
+	coords := [];
+	
+	for w in orderBasis do
+		Append(~coords, RMatrixSpace(Q, 1, 4) ! Coordinates(x*w));
+	end for;
+	
+	mat := Transpose(MatrixRing(Rationals(), 4) ! coords);
+	return orderBasisCoordinates^-1 * mat;
+end function;
+
+function rationalMatrixEmbedding(A)
+	mat := MatrixRing(Rationals(), 4*n) ! 0;
+	for i in [1..n] do
+		for j in [1..n] do
+			elementEmbedding := leftRegularRep(A[i][j]);
+			
+			for k in [1..4] do
+				for l in [1..4] do
+					mat[4*(i-1)+k][4*(j-1)+l] := elementEmbedding[k][l];
+				end for;
+			end for;
+		end for;
+	end for;
+	
+	return mat;
+end function;
+
+embeddedMatrices := [];
+for i in [1..n] do
+	for j in [1..n] do
+		for w in orderBasis do
+			mat := matricesB ! 0;
+			mat[i][j] := w;
+			
+			Append(~embeddedMatrices, rationalMatrixEmbedding(mat));
+		end for;
+	end for;
+end for;
+
+embeddedAlgebra := sub<MatrixAlgebra(Rationals(), 4*n) | embeddedMatrices>;
+embeddedCentraliser := Centraliser(MatrixAlgebra(Rationals(), 4*n), embeddedAlgebra);
+centraliserBasis := Basis(embeddedCentraliser);
 
 //Checks if matrix A is defined over the order O
 function overO(A)

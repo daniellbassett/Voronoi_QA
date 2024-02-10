@@ -1,4 +1,4 @@
-import "init.m" : matricesB, Dagger, n, overO;
+import "init.m" : matricesB, Dagger, n, overO, dieuDet, centraliserBasis;
 import "symmetricSpace.m" : perpendicularForm, minimalVectors, positiveDefinite, getVectorsSizeRange, evaluateHermitian, perfectionRank, toHermitian, toHermitians, createGram;
 import "polytope.m" : facetsAsForms;
 
@@ -96,63 +96,45 @@ function neighbour(perfectForm, facet) //finds the perfect form sharing facet wi
 	return perfectForm + min * orthoForm;
 end function;
 
+function clearDenoms(gram1, gram2)
+	denoms := [];
+	
+	for i in [1..NumberOfRows(gram1)] do
+		for j in [1..NumberOfColumns(gram1)] do
+			Append(~denoms, Denominator(gram1[i][j]));
+			Append(~denoms, Denominator(gram2[i][j]));
+		end for;
+	end for;
+	
+	denom := LCM(denoms);
+	gram1 *:= denom;
+	gram2 *:= denom;
+	
+	return gram1, gram2;
+end function;
+
 function equivalent(form1, form2)
-	//Currently hard-coded for n = 2.
-	_, minVecs1 := minimalVectors(form1);
-	_, minVecs2 := minimalVectors(form2);
+	gram1 := createGram(form1);
+	gram2 := createGram(form2);
 	
-	if #minVecs1 eq #minVecs2 then
-		if Determinant(createGram(form1)) eq Determinant(createGram(form2)) then
-			//First find linearly independent minimal vectors of form1
-			found1 := false;
-			for i in [1..#minVecs1] do
-				for j in [i+1..#minVecs1] do
-					if toHermitian(minVecs1[i]) ne toHermitian(minVecs1[j]) then
-						found1 := true;
-						
-						i1 := i;
-						j1 := j; 
-						break;
-					end if;
-				end for;
-				
-				if found1 then
-					break;
-				end if;
-			end for;
-			
-			mat1 := Transpose(matricesB ! [Transpose(minVecs1[i1]), Transpose(minVecs1[j1])]);
-			mat1Inv := mat1^-1;
-			
-			//Now find linear map taking them to each pair of minimal vectors of form2; if form1 and form2 are equivalent, it must be under a map of this form
-			for i in [1..#minVecs2] do
-				for j in [1..#minVecs2] do //Need to go from 1 instead of i+1 since the linear map may not preserve the ordering of the vertices
-					//Check the minimal vectors of form 2 are also independent
-					if toHermitian(minVecs2[i]) ne toHermitian(minVecs2[j]) then
-						//Create linear map
-						mat2 := Transpose(matricesB ! [Transpose(minVecs2[i]), Transpose(minVecs2[j])]);
-						det := dieuDet(mat2);
-						
-						if det ne 0 then
-							mat := mat2 * mat1Inv;
-							//Is it defined over O							
-							if overO(mat) then
-								//Is the inverse defined over O
-								if overO(mat^-1) then
-									//Does it take form2 to form1 as desired
-									if form1 eq Dagger(mat)*form2*mat then
-										return true;
-									end if;
-								end if;
-							end if;
-						end if;
-					end if;
-				end for;
-			end for;
-		end if;
+	if Determinant(gram1) eq Determinant(gram2) then
+		//Create twisted Gram matrices with integer coefficients
+		gram1, gram2 := clearDenoms(gram1, gram2);
+		
+		twistedGrams1 := [gram1 * b : b in centraliserBasis];
+		twistedGrams2 := [gram2 * b : b in centraliserBasis];
+		
+		for i in [1..#centraliserBasis] do
+			twistedGrams1[i], twistedGrams2[i] := clearDenoms(twistedGrams1[i], twistedGrams2[i]);
+		end for;
+		
+		twistedGrams1 := [MatrixRing(Integers(), 4*n) ! mat : mat in twistedGrams1];
+		twistedGrams2 := [MatrixRing(Integers(), 4*n) ! mat : mat in twistedGrams2];
+		
+		return IsIsometric(twistedGrams1, twistedGrams2);
+	else
+		return false;
 	end if;
-	
-	return false;
 end function;
 
 function voronoiAlgorithm()
