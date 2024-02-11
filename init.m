@@ -13,7 +13,7 @@ n := 1; //Number of variables
 hermDim := 4*n + 4*n*(n-1); //Each diagonal entry adds 4, each non-diagonal adds 8
 
 //Create quaternion algebra B/Q and order O
-a := -1;
+a := -3;
 b := -1;
 B<x,y,z> := QuaternionAlgebra<K|a,b>;
 O := MaximalOrder(B); 
@@ -111,7 +111,7 @@ function matrixRationalToQuaternion(A)
 	for i in [1..n] do
 		for j in [1..n] do
 			for k in [1..#orderBasis] do
-				mat[i][j] +:= orderBasis[k] * A[orderBasis*(i-1)+k][#orderBasis*(j-1)+1]; //Regular representation was taken in basis orderBasis
+				mat[i][j] +:= orderBasis[k] * A[#orderBasis*(i-1)+k][#orderBasis*(j-1)+1]; //Regular representation was taken in basis orderBasis
 			end for;
 		end for;
 	end for;
