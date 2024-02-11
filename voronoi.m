@@ -50,13 +50,6 @@ function neighbour(perfectForm, facet) //finds the perfect form sharing facet wi
 	orthoForm := perpendicularForms(facet);
 	_, minVecs := minimalVectors(perfectForm);
 	
-	print facet, orthoForm;
-	for form in facet do
-		print innerProduct(orthoForm, form);
-	end for;
-	
-	//print "found orthogonal form and minimal vectors";
-	
 	for i in [1..#minVecs] do
 		if evaluateHermitian(orthoForm, minVecs[i]) lt 0 then //<orthoForm, minVecs[i]> >= 0 required
 			orthoForm := -orthoForm;
@@ -137,7 +130,11 @@ function equivalent(form1, form2)
 		twistedGrams1 := [MatrixRing(Integers(), #orderBasis*n) ! mat : mat in twistedGrams1];
 		twistedGrams2 := [MatrixRing(Integers(), #orderBasis*n) ! mat : mat in twistedGrams2];
 		
-		equiv, witness := IsIsometric(twistedGrams2, twistedGrams1);
+		gram1, gram2 := clearDenoms(gram1, gram2);
+		L1 := LatticeWithGram(gram1);
+		L2 := LatticeWithGram(gram2);
+		
+		equiv, witness := IsIsometric(L2, twistedGrams2, L1, twistedGrams1);
 		if equiv then
 			return equiv, Transpose(witness);
 		else
@@ -253,7 +250,8 @@ function voronoiAlgorithm()
 		print #untested, "classes found but not yet tested;", #perfectForms, "total classes found";
 		
 		_, minVecs := minimalVectors(untested[1]);
-		facets := facetsAsForms(toHermitians(minVecs));
+		minForms := toHermitians(minVecs);
+		facets := facetsAsForms(minForms);		
 		
 		print #facets, "facets for current perfect form";
 		for i in [1..#facets] do //Find all neighbouring forms
