@@ -1,28 +1,32 @@
 //This files prepares all of the things about the quaternion algebra for use in other files
-//To use: edit n for the dimension of matrices, a,b, for the definite rational quaternion algebra B, and O for the order of B
+//To use: edit imaginary quadratic field K, n for the dimension of matrices, a < 0 for the quaternion algebra B/K, and O for the order of B
+//The restriction a < 0 and b = -1 guarantee that the standard involution on B agrees with the one defined in Coulangeon et. al. with respect to the regular representation.
+//Note that these algebras will always be split for K = Q(i), so this field should be avoided. 
 
 import "symmetricSpace.m" : innerProduct;
 
-Q := Rationals(); //Base field
+R<t> := PolynomialRing(Integers());
+K<theta> := NumberField(t^2+2); //Base field
+sigma := Automorphisms(K)[2];
 
-n := 2; //Number of variables
-hermDim := n + 2*n*(n-1);
+n := 1; //Number of variables
+hermDim := 4*n + 4*n*(n-1); //Each diagonal entry adds 4, each non-diagonal adds 8
 
 //Create quaternion algebra B/Q and order O
-a := -3;
-b := -17;
-B<i,j,k> := QuaternionAlgebra<Q|a,b>;
+a := -1;
+b := -1;
+B<x,y,z> := QuaternionAlgebra<K|a,b>;
 O := MaximalOrder(B); 
 
 //Basis for order
-orderBasis := Basis(O);
+orderBasis := ZBasis(O);
 matricesB := MatrixRing(B, n);
 
 //Create basis for O^n from a basis for O, as a list of vectors
-latticeBasis := [RMatrixSpace(B, n, 1) ! 0 : i in [1..4*n]];
+latticeBasis := [RMatrixSpace(B, n, 1) ! 0 : i in [1..#orderBasis*n]];
 for i in [1..n] do
-	for j in [1..4] do
-		latticeBasis[j+4*(i-1)][i][1] := orderBasis[j];
+	for j in [1..#orderBasis] do
+		latticeBasis[j+#orderBasis*(i-1)][i][1] := orderBasis[j];
 	end for;
 end for;
 
@@ -32,7 +36,8 @@ function Dagger(A)
 	
 	for i in [1..NumberOfRows(A)] do
 		for j in [1..NumberOfColumns(A)] do
-			ADagger[j][i] := Conjugate(A[i][j]);
+			coords := [sigma(coord) : coord in Coordinates(Conjugate(A[i][j]))];
+			ADagger[j][i] := B ! coords;
 		end for;
 	end for;
 	
@@ -44,10 +49,13 @@ hermBasis := [matricesB ! 0 : i in [1..hermDim]];
 count := 1;
 for i in [1..n] do
 	hermBasis[count][i][i] := 1;
-	count +:= 1;
+	hermBasis[count+1][i][i] := theta * x;
+	hermBasis[count+2][i][i] := theta * y;
+	hermBasis[count+3][i][i] := theta * z;
+	count +:= 4;
 	
 	for j in [i+1..n] do
-		for k in [1..4] do //orderBasis has length 4 since quaternion algebra
+		for k in [1..#orderBasis] do
 			hermBasis[count][i][j] := orderBasis[k];
 			hermBasis[count][j][i] := Conjugate(orderBasis[k]);
 			
@@ -57,29 +65,53 @@ for i in [1..n] do
 end for;
 
 //Centraliser of the embedding as rational matrices, for use in equivalence testing and automorphism group calculations (Coulangeon et. al. Lemma 7.2)
-orderBasisCoordinates := Transpose(MatrixRing(Q,4) ! [Coordinates(orderBasis[i]) : i in [1..4]]);
+function elementToRational(x)
+	coords := Coordinates(x);
+	coordsRat := [];
+	for y in coords do
+		coordsRat cat:= Eltseq(y);
+	end for;
+	
+	return coordsRat;
+end function;
+
+orderBasisCoordinates := Transpose(MatrixRing(Rationals(),#orderBasis) ! [elementToRational(orderBasis[i]) : i in [1..#orderBasis]]);
 
 function leftRegularRep(x) //x acting on the right on B as a Q-vector space
 	coords := [];
 	
 	for w in orderBasis do
-		Append(~coords, RMatrixSpace(Q, 1, 4) ! Coordinates(x*w));
+		Append(~coords, RMatrixSpace(Rationals(), 1, #orderBasis) ! elementToRational(x*w));
 	end for;
 	
-	mat := Transpose(MatrixRing(Rationals(), 4) ! coords);
+	mat := Transpose(MatrixRing(Rationals(), #orderBasis) ! coords);
 	return orderBasisCoordinates^-1 * mat;
 end function;
 
 function rationalMatrixEmbedding(A)
-	mat := MatrixRing(Rationals(), 4*n) ! 0;
+	mat := MatrixRing(Rationals(), #orderBasis*n) ! 0;
 	for i in [1..n] do
 		for j in [1..n] do
 			elementEmbedding := leftRegularRep(A[i][j]);
 			
-			for k in [1..4] do
-				for l in [1..4] do
-					mat[4*(i-1)+k][4*(j-1)+l] := elementEmbedding[k][l];
+			for k in [1..#orderBasis] do
+				for l in [1..#orderBasis] do
+					mat[#orderBasis*(i-1)+k][#orderBasis*(j-1)+l] := elementEmbedding[k][l];
 				end for;
+			end for;
+		end for;
+	end for;
+	
+	return mat;
+end function;
+
+function matrixRationalToQuaternion(A)
+	mat := matricesB ! 0;
+	
+	for i in [1..n] do
+		for j in [1..n] do
+			for k in [1..#orderBasis] do
+				mat[i][j] +:= orderBasis[k] * A[orderBasis*(i-1)+k][#orderBasis*(j-1)+1]; //Regular representation was taken in basis orderBasis
 			end for;
 		end for;
 	end for;
@@ -99,8 +131,8 @@ for i in [1..n] do
 	end for;
 end for;
 
-embeddedAlgebra := sub<MatrixAlgebra(Rationals(), 4*n) | embeddedMatrices>;
-embeddedCentraliser := Centraliser(MatrixAlgebra(Rationals(), 4*n), embeddedAlgebra);
+embeddedAlgebra := sub<MatrixAlgebra(Rationals(), #orderBasis*n) | embeddedMatrices>;
+embeddedCentraliser := Centraliser(MatrixAlgebra(Rationals(), #orderBasis*n), embeddedAlgebra);
 centraliserBasis := Basis(embeddedCentraliser);
 
 //Checks if matrix A is defined over the order O

@@ -3,7 +3,7 @@ import "init.m" : B, n, latticeBasis, hermBasis, Dagger;
 
 
 function innerProduct(A,B)
-	return Trace(Trace(A * B)); //Inner trace is matrix trace, outer trace is quaternion algebra reduced trace; this composition is the reduced trace on Mat_n(H)/R
+	return Trace(Trace(Trace(A * B))); //Inner trace is matrix trace, middle trace is quaternion algebra reduced trace, outer is Tr_K/Q; this composition is the reduced trace on Mat_n(B)/Q
 end function;
 
 //Embeds O^n vectors in Herm_n
@@ -41,10 +41,26 @@ function evaluateHermitian(A, v) //Evaluates Hermitian form A on vector v
 end function;
 
 function evaluateBilinear(A, v, w) //Evaluates the corresponding real bilinear form on vectors v,w
-	return Trace(Trace(A*(v*Dagger(w) + w*Dagger(v))))/2;
+	//return Trace(Trace(Trace(A*(v*Dagger(w) + w*Dagger(v)))))/2;
+	return (evaluateHermitian(A, v+w) - evaluateHermitian(A, v) - evaluateHermitian(A, w))/2;
 end function;
 
 //Gram matrix
+function createGramSlow(A)
+	Gram := MatrixRing(Rationals(), #latticeBasis) ! 0;
+	
+	for i in [1..#latticeBasis] do
+		Gram[i][i] := evaluateHermitian(A, latticeBasis[i]);
+		
+		for j in [i+1..#latticeBasis] do
+			Gram[i][j] := Trace(Trace(A*latticeBasis[i] * Dagger(latticeBasis[j])));
+			Gram[j][i] := Gram[i][j];
+		end for;
+	end for;
+	
+	return Gram;
+end function;
+
 function createGram(A)
 	Gram := MatrixRing(Rationals(), #latticeBasis) ! 0; //Rationals() instead of the number field version allows use of lattice reduction routines, since it is considered as a subfield of the reals
 	
@@ -98,6 +114,7 @@ function getVectorsSizeRange(A, lower, upper)
 	for i in [1..#coefficients] do
 		for j in [1..#latticeBasis] do
 			shortVecs[i] +:= coefficients[i][1][j] * latticeBasis[j];
+			//shortVecs[#coefficients+i] +:= -coefficients[i][1][j] * latticeBasis[j];
 		end for;
 	end for;
 	
@@ -127,6 +144,62 @@ function perpendicularForm(S) //A set S of vectors in O^n
 	return orthogonalForm;
 end function;
 
+function formBasis(S) //Returns a basis for the real vector space spanned by a set S of Hermitian matrices
+	innerProductMatrix := RMatrixSpace(B, #hermBasis, #S) ! 0;
+	
+	for i in [1..#hermBasis] do
+		for j in [1..#S] do
+			innerProductMatrix[i][j] := innerProduct(hermBasis[i], S[j]);
+		end for;
+	end for;
+	
+	M := EchelonForm(innerProductMatrix);
+	
+	basis := [];
+	
+	i := 1;
+	j := 1;
+	while i le #hermBasis and j le #S do
+		found := true;
+		for k in [1..#hermBasis] do
+			if k eq i then
+				if M[k][j] ne 1 then
+					found := false;
+					break;
+				end if;
+			elif M[k][j] ne 0 then
+				found := false;
+				break;
+			end if;
+		end for;
+		
+		if found then
+			Append(~basis, S[j]);
+			i +:= 1;
+		end if;
+		j +:= 1;
+	end while;
+	
+	return basis;
+end function;
+
+function linearCombinations(basis, vectors) //Writes vectors in terms of basis
+	S := basis cat vectors;
+
+	innerProductMatrix := RMatrixSpace(B, #hermBasis, #S) ! 0;
+	
+	for i in [1..#hermBasis] do
+		for j in [1..#S] do
+			innerProductMatrix[i][j] := innerProduct(hermBasis[i], S[j]);
+		end for;
+	end for;
+
+	M := EchelonForm(innerProductMatrix);
+
+	return Submatrix(M, 1, #basis+1, #basis, #vectors);
+end function;
+	
+
 function perfectionRank(form)
 	_, minVecs := minimalVectors(form);
 	S := toHermitians(minVecs);
@@ -138,6 +211,6 @@ function perfectionRank(form)
 		end for;
 	end for;
 	
-	kernelCoordinates := KernelMatrix(innerProductMatrix);
+	kernelCoordinates := KernelMatrix(innerProductMatrix); //kernelCoordinates * innerProductMatrix = 0
 	return #hermBasis - NumberOfRows(kernelCoordinates);
 end function;
