@@ -110,11 +110,11 @@ function getVectorsSizeRange(A, lower, upper)
 		coefficients := ShortVectors(L, lower, upper);
 	end if;
 	
-	shortVecs := [RMatrixSpace(B, n, 1) ! 0 : i in [1..#coefficients]];
+	shortVecs := [RMatrixSpace(B, n, 1) ! 0 : i in [1..2*#coefficients]];
 	for i in [1..#coefficients] do
 		for j in [1..#latticeBasis] do
 			shortVecs[i] +:= coefficients[i][1][j] * latticeBasis[j];
-			//shortVecs[#coefficients+i] +:= -coefficients[i][1][j] * latticeBasis[j];
+			shortVecs[#coefficients+i] +:= -coefficients[i][1][j] * latticeBasis[j];
 		end for;
 	end for;
 	
@@ -128,6 +128,28 @@ function perpendicularForm(S) //A set S of vectors in O^n
 	for i in [1..#hermBasis] do
 		for j in [1..#S] do
 			innerProductMatrix[i][j] := innerProduct(hermBasis[i], S[j] * Dagger(S[j])); //The inner product with the corresponding forms to the vectors
+		end for;
+	end for;
+	
+	kernelCoordinates := KernelMatrix(innerProductMatrix);
+	
+	orthogonalForm := MatrixRing(B, n) ! 0;
+	
+	if NumberOfRows(kernelCoordinates) gt 0 then //At least one orthogonal form found
+		for i in [1..#hermBasis] do
+			orthogonalForm +:= kernelCoordinates[1][i] * hermBasis[i];
+		end for;
+	end if;
+	
+	return orthogonalForm;
+end function;
+
+function perpendicularForms(S) //A set S of vectors in O^n
+	innerProductMatrix := RMatrixSpace(B, #hermBasis, #S) ! 0;
+
+	for i in [1..#hermBasis] do
+		for j in [1..#S] do
+			innerProductMatrix[i][j] := innerProduct(hermBasis[i], S[j]); //The inner product with the corresponding forms to the vectors
 		end for;
 	end for;
 	
