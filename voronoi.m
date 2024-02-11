@@ -155,7 +155,9 @@ function automorphisms(form)
 	end for;
 	twistedGrams := [MatrixRing(Integers(), #orderBasis*n) ! mat : mat in twistedGrams];
 	
-	autGroup := AutomorphismGroup(twistedGrams);
+	gram := clearDenoms(gram,gram);
+	L := LatticeWithGram(gram);
+	autGroup := AutomorphismGroup(L, twistedGrams);
 	
 	//Check for orientation preservation
 	_, minVecs := minimalVectors(form);
