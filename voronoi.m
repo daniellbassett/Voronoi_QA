@@ -1,5 +1,5 @@
 import "init.m" : matricesB, Dagger, n, overO, dieuDet, centraliserBasis;
-import "symmetricSpace.m" : perpendicularForm, minimalVectors, positiveDefinite, getVectorsSizeRange, evaluateHermitian, perfectionRank, toHermitian, toHermitians, createGram;
+import "symmetricSpace.m" : perpendicularForm, perpendicularForms, minimalVectors, positiveDefinite, getVectorsSizeRange, evaluateHermitian, perfectionRank, toHermitian, toHermitians, createGram;
 import "polytope.m" : facetsAsForms;
 
 function initialPerfectForm()
@@ -47,7 +47,7 @@ function initialPerfectForm()
 end function;
 
 function neighbour(perfectForm, facet) //finds the perfect form sharing facet with perfectForm
-	orthoForm := perpendicularForm(facet);
+	orthoForm := perpendicularForms(facet);
 	_, minVecs := minimalVectors(perfectForm);
 	
 	for i in [1..#minVecs] do

@@ -127,6 +127,28 @@ function perpendicularForm(S) //A set S of vectors in O^n
 	return orthogonalForm;
 end function;
 
+function perpendicularForms(S) //A set S of Hermitian forms
+	innerProductMatrix := RMatrixSpace(B, #hermBasis, #S) ! 0;
+
+	for i in [1..#hermBasis] do
+		for j in [1..#S] do
+			innerProductMatrix[i][j] := innerProduct(hermBasis[i], S[j]); //The inner product with the corresponding forms to the vectors
+		end for;
+	end for;
+	
+	kernelCoordinates := KernelMatrix(innerProductMatrix);
+	
+	orthogonalForm := MatrixRing(B, n) ! 0;
+	
+	if NumberOfRows(kernelCoordinates) gt 0 then //At least one orthogonal form found
+		for i in [1..#hermBasis] do
+			orthogonalForm +:= kernelCoordinates[1][i] * hermBasis[i];
+		end for;
+	end if;
+	
+	return orthogonalForm;
+end function;
+
 function perfectionRank(form)
 	_, minVecs := minimalVectors(form);
 	S := toHermitians(minVecs);
