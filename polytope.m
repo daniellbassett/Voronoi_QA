@@ -22,6 +22,24 @@ end function;
 //Finding facets
 function facetsAsForms(S) //Takes a sequence of forms, returns a list of the facets of the polytope they form
 	poly := toPolytope(S);
+	
+	redundant := true;
+	while redundant do
+		redundant := false;
+		for i in [1..#S] do
+			otherForms := Remove(S, i);
+			poly2 := toPolytope(otherForms);
+			
+			if poly eq poly2 then
+				redundant := true;
+				Remove(~S, i);
+				break;
+			end if;
+		end for;
+	end while;
+	
+	poly := toPolytope(S);
+	
 	facets := FacetIndices(poly);
 	
 	formList := [];
