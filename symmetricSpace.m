@@ -156,7 +156,7 @@ function perfectionRank(form)
 
 	for i in [1..#hermBasis] do
 		for j in [1..#S] do
-			innerProductMatrix[i][j] := innerProduct(hermBasis[i], S[j] * Dagger(S[j])); //The inner product with the corresponding forms to the vectors
+			innerProductMatrix[i][j] := innerProduct(hermBasis[i], S[j]);
 		end for;
 	end for;
 	
