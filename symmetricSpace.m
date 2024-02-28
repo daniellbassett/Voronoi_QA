@@ -1,9 +1,9 @@
 //The symmetric space of Hermitian nxn matrices over a quaternion algebra
-import "init.m" : B, n, latticeBasis, hermBasis, Dagger;
-
+import "init.m" : K, n, latticeBasis, hermBasis, Dagger;
 
 function innerProduct(A,B)
-	return Trace(Trace(Trace(A * B))); //Inner trace is matrix trace, middle trace is quaternion algebra reduced trace, outer is Tr_K/Q; this composition is the reduced trace on Mat_n(B)/Q
+	//print A, B;
+	return Trace(A * B); //Inner trace is matrix trace, middle trace is quaternion algebra reduced trace, outer is Tr_K/Q; this composition is the reduced trace on Mat_n(B)/Q
 end function;
 
 //Embeds O^n vectors in Herm_n
@@ -37,7 +37,7 @@ end function;
 
 //Evaluating forms
 function evaluateHermitian(A, v) //Evaluates Hermitian form A on vector v
-	return innerProduct(A, v*Dagger(v));
+	return Rationals() ! innerProduct(A, v*Dagger(v));
 end function;
 
 function evaluateBilinear(A, v, w) //Evaluates the corresponding real bilinear form on vectors v,w
@@ -76,6 +76,18 @@ function createGram(A)
 	return Gram;
 end function;
 
+function createTwistedGram(A, w)
+	Gram := MatrixRing(Rationals(), #latticeBasis) ! 0;
+	
+	for i in [1..#latticeBasis] do
+		for j in [1..#latticeBasis] do
+			Gram[i][j] := evaluateBilinear(A, w * latticeBasis[i], latticeBasis[j]);
+		end for;
+	end for;
+	
+	return Gram;
+end function;
+
 function positiveDefinite(A)
 	Gram := createGram(A);
 	return IsPositiveDefinite(Gram);
@@ -89,7 +101,7 @@ function minimalVectors(A)
 	
 	coefficients := ShortestVectors(L); //gets coefficients of the lattice for the minimal vectors; also assigns L`minimum
 	
-	minVecs := [RMatrixSpace(B, n, 1) ! 0 : i in [1..2*#coefficients]]; //ShortestVectors only returns minimal vectors up to sign; we add negatives back in
+	minVecs := [RMatrixSpace(K, n, 1) ! 0 : i in [1..2*#coefficients]]; //ShortestVectors only returns minimal vectors up to sign; we add negatives back in
 	for i in [1..#coefficients] do
 		for j in [1..#latticeBasis] do
 			minVecs[i] +:=  coefficients[i][j] * latticeBasis[j];
@@ -97,7 +109,7 @@ function minimalVectors(A)
 		end for;
 	end for;
 	
-	return L`Minimum, minVecs;
+	return evaluateHermitian(A, minVecs[1]), minVecs;
 end function;
 
 function getVectorsSizeRange(A, lower, upper)
@@ -110,7 +122,7 @@ function getVectorsSizeRange(A, lower, upper)
 		coefficients := ShortVectors(L, lower, upper);
 	end if;
 	
-	shortVecs := [RMatrixSpace(B, n, 1) ! 0 : i in [1..2*#coefficients]];
+	shortVecs := [RMatrixSpace(K, n, 1) ! 0 : i in [1..2*#coefficients]];
 	for i in [1..#coefficients] do
 		for j in [1..#latticeBasis] do
 			shortVecs[i] +:= coefficients[i][1][j] * latticeBasis[j];
@@ -123,7 +135,7 @@ end function;
 
 //Perpendicular forms
 function perpendicularForm(S) //A set S of vectors in O^n
-	innerProductMatrix := RMatrixSpace(B, #hermBasis, #S) ! 0;
+	innerProductMatrix := RMatrixSpace(K, #hermBasis, #S) ! 0;
 
 	for i in [1..#hermBasis] do
 		for j in [1..#S] do
@@ -133,7 +145,7 @@ function perpendicularForm(S) //A set S of vectors in O^n
 	
 	kernelCoordinates := KernelMatrix(innerProductMatrix);
 	
-	orthogonalForm := MatrixRing(B, n) ! 0;
+	orthogonalForm := MatrixRing(K, n) ! 0;
 	
 	if NumberOfRows(kernelCoordinates) gt 0 then //At least one orthogonal form found
 		for i in [1..#hermBasis] do
@@ -145,7 +157,7 @@ function perpendicularForm(S) //A set S of vectors in O^n
 end function;
 
 function perpendicularForms(S) //A set S of vectors in O^n
-	innerProductMatrix := RMatrixSpace(B, #hermBasis, #S) ! 0;
+	innerProductMatrix := RMatrixSpace(K, #hermBasis, #S) ! 0;
 
 	for i in [1..#hermBasis] do
 		for j in [1..#S] do
@@ -155,7 +167,7 @@ function perpendicularForms(S) //A set S of vectors in O^n
 	
 	kernelCoordinates := KernelMatrix(innerProductMatrix);
 	
-	orthogonalForm := MatrixRing(B, n) ! 0;
+	orthogonalForm := MatrixRing(K, n) ! 0;
 	
 	if NumberOfRows(kernelCoordinates) gt 0 then //At least one orthogonal form found
 		for i in [1..#hermBasis] do
@@ -167,7 +179,7 @@ function perpendicularForms(S) //A set S of vectors in O^n
 end function;
 
 function formBasis(S) //Returns a basis for the real vector space spanned by a set S of Hermitian matrices
-	innerProductMatrix := RMatrixSpace(B, #hermBasis, #S) ! 0;
+	innerProductMatrix := RMatrixSpace(K, #hermBasis, #S) ! 0;
 	
 	for i in [1..#hermBasis] do
 		for j in [1..#S] do
@@ -208,7 +220,7 @@ end function;
 function linearCombinations(basis, vectors) //Writes vectors in terms of basis
 	S := basis cat vectors;
 
-	innerProductMatrix := RMatrixSpace(B, #hermBasis, #S) ! 0;
+	innerProductMatrix := RMatrixSpace(K, #hermBasis, #S) ! 0;
 	
 	for i in [1..#hermBasis] do
 		for j in [1..#S] do
@@ -225,7 +237,7 @@ end function;
 function perfectionRank(form)
 	_, minVecs := minimalVectors(form);
 	S := toHermitians(minVecs);
-	innerProductMatrix := RMatrixSpace(B, #hermBasis, #S) ! 0;
+	innerProductMatrix := RMatrixSpace(K, #hermBasis, #S) ! 0;
 
 	for i in [1..#hermBasis] do
 		for j in [1..#S] do

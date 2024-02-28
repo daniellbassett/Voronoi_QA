@@ -3,27 +3,23 @@
 //The restriction a < 0 and b = -1 guarantee that the standard involution on B agrees with the one defined in Coulangeon et. al. with respect to the regular representation.
 //Note that these algebras will always be split for K = Q(i), so this field should be avoided. 
 
-import "symmetricSpace.m" : innerProduct;
+d := 14;
 
 R<t> := PolynomialRing(Integers());
-K<theta> := NumberField(t^2+2); //Base field
+K<theta> := NumberField(t^2+d); //Base field
 sigma := Automorphisms(K)[2];
 
-n := 1; //Number of variables
-hermDim := 4*n + 4*n*(n-1); //Each diagonal entry adds 4, each non-diagonal adds 8
+n := 2; //Number of variables
+hermDim := n + n*(n-1); //Each diagonal entry adds 1, each non-diagonal adds 2
 
-//Create quaternion algebra B/Q and order O
-a := -3;
-b := -1;
-B<x,y,z> := QuaternionAlgebra<K|a,b>;
-O := MaximalOrder(B); 
+//Order and basis
+O := MaximalOrder(K); 
+orderBasis := Basis(O);
 
-//Basis for order
-orderBasis := ZBasis(O);
-matricesB := MatrixRing(B, n);
+matricesB := MatrixRing(K, n);
 
 //Create basis for O^n from a basis for O, as a list of vectors
-latticeBasis := [RMatrixSpace(B, n, 1) ! 0 : i in [1..#orderBasis*n]];
+latticeBasis := [RMatrixSpace(K, n, 1) ! 0 : i in [1..#orderBasis*n]];
 for i in [1..n] do
 	for j in [1..#orderBasis] do
 		latticeBasis[j+#orderBasis*(i-1)][i][1] := orderBasis[j];
@@ -32,12 +28,11 @@ end for;
 
 //Involution on matrices over B
 function Dagger(A)
-	ADagger := RMatrixSpace(B, NumberOfColumns(A), NumberOfRows(A)) ! 0;
+	ADagger := RMatrixSpace(K, NumberOfColumns(A), NumberOfRows(A)) ! 0;
 	
 	for i in [1..NumberOfRows(A)] do
 		for j in [1..NumberOfColumns(A)] do
-			coords := [sigma(coord) : coord in Coordinates(Conjugate(A[i][j]))];
-			ADagger[j][i] := B ! coords;
+			ADagger[j][i] := sigma(A[i][j]);
 		end for;
 	end for;
 	
@@ -49,21 +44,18 @@ hermBasis := [matricesB ! 0 : i in [1..hermDim]];
 count := 1;
 for i in [1..n] do
 	hermBasis[count][i][i] := 1;
-	hermBasis[count+1][i][i] := theta * x;
-	hermBasis[count+2][i][i] := theta * y;
-	hermBasis[count+3][i][i] := theta * z;
-	count +:= 4;
+	count +:= 1;
 	
 	for j in [i+1..n] do
 		for k in [1..#orderBasis] do
 			hermBasis[count][i][j] := orderBasis[k];
-			hermBasis[count][j][i] := Conjugate(orderBasis[k]);
+			hermBasis[count][j][i] := sigma(orderBasis[k]);
 			
 			count +:= 1;
 		end for;
 	end for;
 end for;
-
+/*
 //Centraliser of the embedding as rational matrices, for use in equivalence testing and automorphism group calculations (Coulangeon et. al. Lemma 7.2)
 function elementToRational(x)
 	coords := Coordinates(x);
@@ -134,7 +126,7 @@ end for;
 embeddedAlgebra := sub<MatrixAlgebra(Rationals(), #orderBasis*n) | embeddedMatrices>;
 embeddedCentraliser := Centraliser(MatrixAlgebra(Rationals(), #orderBasis*n), embeddedAlgebra);
 centraliserBasis := Basis(embeddedCentraliser);
-
+*/
 //Checks if matrix A is defined over the order O
 function overO(A)
 	for i in [1..NumberOfRows(A)] do
@@ -147,8 +139,8 @@ function overO(A)
 	
 	return true;
 end function;
-
+/*
 //Dieudonne determinant of 2x2 matrices
 function dieuDet(A)
 	return Norm(A[1][1] * A[2][2]) + Norm(A[1][2]*A[2][1]) - Trace(A[1][1] * Conjugate(A[2][1]) * A[2][2] * Conjugate(A[1][2]));
-end function;
+end function;*/

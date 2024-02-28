@@ -1,10 +1,10 @@
 import "init.m" : matricesB, Dagger, n, overO, dieuDet, centraliserBasis, matrixRationalToQuaternion, orderBasis;
-import "symmetricSpace.m" : perpendicularForm, perpendicularForms, minimalVectors, positiveDefinite, getVectorsSizeRange, evaluateHermitian, perfectionRank, toHermitian, toHermitians, createGram, formBasis, linearCombinations, innerProduct;
+import "symmetricSpace.m" : perpendicularForm, perpendicularForms, minimalVectors, positiveDefinite, getVectorsSizeRange, evaluateHermitian, perfectionRank, toHermitian, toHermitians, createGram, formBasis, linearCombinations, innerProduct, createTwistedGram;
 import "polytope.m" : facetsAsForms;
 
 function initialPerfectForm()
 	//Start with the identity
-	form := matricesB ! 1;
+	form := matricesB ! [1,-1/2,-1/2,1];
 	
 	min, minVecs := minimalVectors(form);
 	rank := perfectionRank(form);
@@ -120,10 +120,10 @@ function equivalent(form1, form2)
 	
 	if Determinant(gram1) eq Determinant(gram2) then
 		//Create twisted Gram matrices with integer coefficients
-		twistedGrams1 := [gram1 * b : b in centraliserBasis];
-		twistedGrams2 := [gram2 * b : b in centraliserBasis];
+		twistedGrams1 := [createTwistedGram(form1, w) : w in orderBasis];
+		twistedGrams2 := [createTwistedGram(form2, w) : w in orderBasis];
 		
-		for i in [1..#centraliserBasis] do
+		for i in [1..#orderBasis] do
 			twistedGrams1[i], twistedGrams2[i] := clearDenoms(twistedGrams1[i], twistedGrams2[i]);
 		end for;
 		

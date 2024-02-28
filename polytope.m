@@ -6,7 +6,7 @@ function toRationalSequence(A) //Converts a form over B into an element of V
 	
 	for i in [1..NumberOfRows(A)] do
 		for j in [1..NumberOfColumns(A)] do
-			coords cat:= elementToRational(A[i][j]);
+			coords cat:= Eltseq(A[i][j]);
 		end for;
 	end for;
 	
@@ -25,7 +25,7 @@ function facetsAsForms(S) //Takes a sequence of forms, returns a list of the fac
 	
 	redundant := true;
 	while redundant do
-		redundant := false;
+		redundant := false;	
 		for i in [1..#S] do
 			otherForms := Remove(S, i);
 			poly2 := toPolytope(otherForms);
