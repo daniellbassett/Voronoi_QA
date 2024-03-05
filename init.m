@@ -55,9 +55,9 @@ for i in [1..n] do
 		end for;
 	end for;
 end for;
-/*
+
 //Centraliser of the embedding as rational matrices, for use in equivalence testing and automorphism group calculations (Coulangeon et. al. Lemma 7.2)
-function elementToRational(x)
+/*function elementToRational(x)
 	coords := Coordinates(x);
 	coordsRat := [];
 	for y in coords do
@@ -65,15 +65,15 @@ function elementToRational(x)
 	end for;
 	
 	return coordsRat;
-end function;
+end function;*/
 
-orderBasisCoordinates := Transpose(MatrixRing(Rationals(),#orderBasis) ! [elementToRational(orderBasis[i]) : i in [1..#orderBasis]]);
+orderBasisCoordinates := Transpose(MatrixRing(Rationals(),#orderBasis) ! [Eltseq(K ! orderBasis[i]) : i in [1..#orderBasis]]);
 
 function leftRegularRep(x) //x acting on the right on B as a Q-vector space
 	coords := [];
 	
 	for w in orderBasis do
-		Append(~coords, RMatrixSpace(Rationals(), 1, #orderBasis) ! elementToRational(x*w));
+		Append(~coords, RMatrixSpace(Rationals(), 1, #orderBasis) ! Eltseq(x*w));
 	end for;
 	
 	mat := Transpose(MatrixRing(Rationals(), #orderBasis) ! coords);
@@ -126,7 +126,7 @@ end for;
 embeddedAlgebra := sub<MatrixAlgebra(Rationals(), #orderBasis*n) | embeddedMatrices>;
 embeddedCentraliser := Centraliser(MatrixAlgebra(Rationals(), #orderBasis*n), embeddedAlgebra);
 centraliserBasis := Basis(embeddedCentraliser);
-*/
+
 //Checks if matrix A is defined over the order O
 function overO(A)
 	for i in [1..NumberOfRows(A)] do
@@ -138,6 +138,20 @@ function overO(A)
 	end for;
 	
 	return true;
+end function;
+
+function matrixRationalToImaginary(A)
+	mat := matricesB ! 0;
+
+	for i in [1..n] do
+		for j in [1..n] do
+			for k in [1..#orderBasis] do
+				mat[i][j] +:= orderBasis[k] * A[#orderBasis*(i-1)+k][#orderBasis*(j-1)+1];
+			end for;
+		end for;
+	end for;
+	
+	return mat;
 end function;
 /*
 //Dieudonne determinant of 2x2 matrices
