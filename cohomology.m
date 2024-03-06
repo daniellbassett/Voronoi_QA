@@ -197,7 +197,7 @@ function retract(perfectForms)
 	return Reverse(cells), Reverse(representatives), Reverse(oriented), Reverse(equivalenceIndices), Reverse(equivalenceWitnesses);
 end function;
 
-function chainMap(cells, representatives, orientability, equivalenceIndices, equivalenceWitnesses, lowDim) //Calculates the orientation sign matrix for classes lowDim to lowDim+1
+function chainMap(cells, representatives, orientability, equivalenceIndices, equivalenceWitnesses, lowDim) //Calculates the orientation sign matrix for classes lowDim-1 to lowDim
 	lowIndex := lowDim;
 	highIndex := lowDim+1;
 	

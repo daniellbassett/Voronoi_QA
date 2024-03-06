@@ -1,9 +1,4 @@
-//This files prepares all of the things about the quaternion algebra for use in other files
-//To use: edit imaginary quadratic field K, n for the dimension of matrices, a < 0 for the quaternion algebra B/K, and O for the order of B
-//The restriction a < 0 and b = -1 guarantee that the standard involution on B agrees with the one defined in Coulangeon et. al. with respect to the regular representation.
-//Note that these algebras will always be split for K = Q(i), so this field should be avoided. 
-
-d := 14;
+d := 427;
 
 R<t> := PolynomialRing(Integers());
 K<theta> := NumberField(t^2+d); //Base field
