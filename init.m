@@ -9,8 +9,8 @@ n := 2; //Number of variables
 hermDim := n + 2*n*(n-1);
 
 //Create quaternion algebra B/Q and order O
-a := -3;
-b := -17;
+a := -1;
+b := -1;
 B<i,j,k> := QuaternionAlgebra<Q|a,b>;
 O := MaximalOrder(B); 
 
@@ -102,6 +102,20 @@ end for;
 embeddedAlgebra := sub<MatrixAlgebra(Rationals(), 4*n) | embeddedMatrices>;
 embeddedCentraliser := Centraliser(MatrixAlgebra(Rationals(), 4*n), embeddedAlgebra);
 centraliserBasis := Basis(embeddedCentraliser);
+
+function matrixRationalToQuaternion(A)
+	mat := matricesB ! 0;
+
+	for i in [1..n] do
+		for j in [1..n] do
+			for k in [1..#orderBasis] do
+				mat[i][j] +:= orderBasis[k] * A[#orderBasis*(i-1)+k][#orderBasis*(j-1)+1];
+			end for;
+		end for;
+	end for;
+	
+	return mat;
+end function;
 
 //Checks if matrix A is defined over the order O
 function overO(A)

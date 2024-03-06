@@ -1,4 +1,4 @@
-import "init.m" : matricesB, Dagger, n, overO, dieuDet, centraliserBasis;
+import "init.m" : matricesB, Dagger, n, overO, dieuDet, centraliserBasis, matrixRationalToQuaternion, rationalMatrixEmbedding;
 import "symmetricSpace.m" : perpendicularForm, perpendicularForms, minimalVectors, positiveDefinite, getVectorsSizeRange, evaluateHermitian, perfectionRank, toHermitian, toHermitians, createGram;
 import "polytope.m" : facetsAsForms;
 
@@ -131,10 +131,39 @@ function equivalent(form1, form2)
 		twistedGrams1 := [MatrixRing(Integers(), 4*n) ! mat : mat in twistedGrams1];
 		twistedGrams2 := [MatrixRing(Integers(), 4*n) ! mat : mat in twistedGrams2];
 		
-		return IsIsometric(twistedGrams1, twistedGrams2);
+		gram1, gram2 := clearDenoms(gram1, gram2);
+		L1 := LatticeWithGram(gram1);
+		L2 := LatticeWithGram(gram2);
+		
+		equiv, witness := IsIsometric(L2, twistedGrams2, L1, twistedGrams1);
+		if equiv then
+			if rationalMatrixEmbedding(matrixRationalToQuaternion(Transpose(witness))) ne Transpose(witness) then
+				print "ALERT! ALERT!";
+			end if;
+			return equiv, Transpose(witness);
+		else
+			return false, false;
+		end if;
 	else
-		return false;
+		return false, false;
 	end if;
+end function;
+
+function automorphisms(form)
+	gram := createGram(form);
+	twistedGrams := [gram * b : b in centraliserBasis];
+	
+	//Scale to have integer coefficients
+	for i in [1..#centraliserBasis] do
+		twistedGrams[i] := clearDenoms(twistedGrams[i], twistedGrams[i]);
+	end for;
+	twistedGrams := [MatrixRing(Integers(), 4*n) ! mat : mat in twistedGrams];
+	
+	gram := clearDenoms(gram,gram);
+	L := LatticeWithGram(gram);
+	autGroup := AutomorphismGroup(L, twistedGrams);
+	
+	return [matrixRationalToQuaternion(Transpose(gamma)) : gamma in autGroup];
 end function;
 
 function voronoiAlgorithm()

@@ -1,3 +1,5 @@
+import "init.m" : matricesB;
+
 function toRationalSequence(A) //Converts a form over B into an element of V
 	coords := [];
 	
@@ -16,8 +18,27 @@ function toPolytope(S) //Takes in a sequence of forms (which will correspond to 
 	return Polytope(vectors);
 end function;
 
+//Finding facets
 function facetsAsForms(S) //Takes a sequence of forms, returns a list of the facets of the polytope they form
 	poly := toPolytope(S);
+	
+	redundant := true;
+	while redundant do
+		redundant := false;	
+		for i in [1..#S] do
+			otherForms := Remove(S, i);
+			poly2 := toPolytope(otherForms);
+			
+			if poly eq poly2 then
+				redundant := true;
+				Remove(~S, i);
+				break;
+			end if;
+		end for;
+	end while;
+	
+	poly := toPolytope(S);
+	
 	facets := FacetIndices(poly);
 	
 	formList := [];
@@ -27,4 +48,14 @@ function facetsAsForms(S) //Takes a sequence of forms, returns a list of the fac
 	end for;
 	
 	return formList;
+end function;
+
+//Barycentre of a facet defined by forms
+function barycentre(S)
+	sum := matricesB ! 0;
+	for form in S do
+		sum +:= form;
+	end for;
+	
+	return sum/#S;
 end function;

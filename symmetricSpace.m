@@ -149,6 +149,61 @@ function perpendicularForms(S) //A set S of Hermitian forms
 	return orthogonalForm;
 end function;
 
+function formBasis(S) //Returns a basis for the real vector space spanned by a set S of Hermitian matrices
+	innerProductMatrix := RMatrixSpace(B, #hermBasis, #S) ! 0;
+	
+	for i in [1..#hermBasis] do
+		for j in [1..#S] do
+			innerProductMatrix[i][j] := innerProduct(hermBasis[i], S[j]);
+		end for;
+	end for;
+	
+	M := EchelonForm(innerProductMatrix);
+	
+	basis := [];
+	
+	i := 1;
+	j := 1;
+	while i le #hermBasis and j le #S do
+		found := true;
+		for k in [1..#hermBasis] do
+			if k eq i then
+				if M[k][j] ne 1 then
+					found := false;
+					break;
+				end if;
+			elif M[k][j] ne 0 then
+				found := false;
+				break;
+			end if;
+		end for;
+		
+		if found then
+			Append(~basis, S[j]);
+			i +:= 1;
+		end if;
+		j +:= 1;
+	end while;
+	
+	return basis;
+end function;
+
+function linearCombinations(basis, vectors) //Writes vectors in terms of basis
+	S := basis cat vectors;
+
+	innerProductMatrix := RMatrixSpace(B, #hermBasis, #S) ! 0;
+	
+	for i in [1..#hermBasis] do
+		for j in [1..#S] do
+			innerProductMatrix[i][j] := innerProduct(hermBasis[i], S[j]);
+		end for;
+	end for;
+
+	M := EchelonForm(innerProductMatrix);
+
+	return Submatrix(M, 1, #basis+1, #basis, #vectors);
+end function;
+
 function perfectionRank(form)
 	_, minVecs := minimalVectors(form);
 	S := toHermitians(minVecs);
