@@ -155,6 +155,7 @@ function equivalent(form1, form2)
 		
 		if equiv then
 			witness := matrixRationalToImaginary(Transpose(witness));
+			return equiv, witness;
 		else
 			return false, false;
 		end if;
