@@ -114,6 +114,23 @@ function clearDenoms(gram1, gram2)
 	return gram1, gram2;
 end function;
 
+function automorphisms(form)
+	gram := createGram(form);
+	twistedGrams := [createTwistedGram(form, w) : w in orderBasis];
+	
+	//Scale to have integer coefficients
+	for i in [1..#orderBasis] do
+		twistedGrams[i] := clearDenoms(twistedGrams[i], twistedGrams[i]);
+	end for;
+	twistedGrams := [MatrixRing(Integers(), #orderBasis*n) ! mat : mat in twistedGrams];
+	
+	gram := clearDenoms(gram,gram);
+	L := LatticeWithGram(gram);
+	autGroup := AutomorphismGroup(L, twistedGrams);
+	
+	return [matrixRationalToImaginary(Transpose(gamma)) : gamma in autGroup];
+end function;
+
 function equivalent(form1, form2)
 	gram1 := createGram(form1);
 	gram2 := createGram(form2);
@@ -134,12 +151,10 @@ function equivalent(form1, form2)
 		L1 := LatticeWithGram(gram1);
 		L2 := LatticeWithGram(gram2);
 		
-		equiv, witness := IsIsometric(L2, twistedGrams2, L1, twistedGrams1);
+		equiv, witness := IsIsometric(L2, twistedGrams2, L1, twistedGrams1); //takes form2 to form1
+		
 		if equiv then
-			if rationalMatrixEmbedding(matrixRationalToImaginary(Transpose(witness))) ne Transpose(witness) then
-				print "ALERT! ALERT!";
-			end if;
-			return equiv, Transpose(witness);
+			witness := matrixRationalToImaginary(Transpose(witness));
 		else
 			return false, false;
 		end if;
@@ -148,25 +163,50 @@ function equivalent(form1, form2)
 	end if;
 end function;
 
-function automorphisms(form)
-	gram := createGram(form);
-	twistedGrams := [createTwistedGram(form, w) : w in orderBasis];
-	
-	//Scale to have integer coefficients
-	for i in [1..#orderBasis] do
-		twistedGrams[i] := clearDenoms(twistedGrams[i], twistedGrams[i]);
-	end for;
-	twistedGrams := [MatrixRing(Integers(), #orderBasis*n) ! mat : mat in twistedGrams];
-	
-	gram := clearDenoms(gram,gram);
-	L := LatticeWithGram(gram);
-	autGroup := AutomorphismGroup(L, twistedGrams);
-	
-	return [matrixRationalToImaginary(Transpose(gamma)) : gamma in autGroup];
-end function;
-
 function voronoiAlgorithm()
 	perfectForms := [initialPerfectForm()];
+	untested := perfectForms;
+	
+	print "Found initial perfect form";
+	
+	while #untested gt 0 do
+		print #untested, "classes found but not yet tested;", #perfectForms, "total classes found";
+		
+		_, minVecs := minimalVectors(untested[1]);
+		minForms := toHermitians(minVecs);
+		facets := facetsAsForms(minForms);		
+		
+		print #facets, "facets for current perfect form";
+		for i in [1..#facets] do //Find all neighbouring forms
+			print "Testing facet", i;
+			//print facets[i];
+			form := neighbour(untested[1], facets[i]);
+			
+			//Check if neighbouring form is equivalent to an already known class
+			new := true;
+			for j in [1..#perfectForms] do
+				if equivalent(form, perfectForms[j]) then
+					new := false;
+					break;
+				end if;
+			end for;
+			
+			if new then
+				Append(~perfectForms, form);
+				Append(~untested, form);
+				print "New perfect form class found";
+			end if;
+		end for;
+		
+		Remove(~untested, 1);
+	end while;
+	
+	return perfectForms;
+end function;
+
+//For debugging purposes
+function conjugateAlgorithm()
+	perfectForms := [Transpose(initialPerfectForm())];
 	untested := perfectForms;
 	
 	print "Found initial perfect form";

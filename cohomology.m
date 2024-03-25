@@ -134,9 +134,7 @@ function complex(facets) //Generates complex from its facets
 			for k in [1..#representatives[i]] do
 				equiv, conjugate := equivalent(barycentre(representatives[i][k]), bary); //conjugate takes bary to barycentre(representatives[i][k])
 				
-				if equiv then
-					conjugate := matrixRationalToImaginary(conjugate);
-					
+				if equiv then					
 					Append(~equivalenceIndices[i], k);
 					Append(~equivalenceWitnesses[i], conjugate);
 					
@@ -162,7 +160,7 @@ function orientationPreserving(G, S) //Determines if G preserves the orientation
 	basis := formBasis(S);
 	
 	for gamma in G do
-		action := linearCombinations(basis, [gamma * minForm * Dagger(gamma) : minForm in basis]);
+		action := linearCombinations(basis, [Dagger(gamma) * minForm * gamma : minForm in basis]);
 		
 		det := Determinant(MatrixRing(Rationals(), #basis) ! action);
 		if det lt 0 then
@@ -201,7 +199,7 @@ function chainMap(cells, representatives, orientability, equivalenceIndices, equ
 	lowIndex := lowDim;
 	highIndex := lowDim+1;
 	
-	orientationMatrix := RMatrixSpace(Rationals(), #representatives[highIndex], #representatives[lowIndex]) ! 0;	
+	orientationMatrix := RMatrixSpace(Rationals(), #representatives[highIndex], #representatives[lowIndex]) ! 0;
 	
 	for i in [1..#representatives[highIndex]] do //Higher dim representatives
 		if orientability[highIndex][i] then
@@ -214,6 +212,10 @@ function chainMap(cells, representatives, orientability, equivalenceIndices, equ
 				lowCellIndex := Position(cells[lowIndex], facet);
 				facetIndex := equivalenceIndices[lowIndex][lowCellIndex];
 				
+				//print equivalenceIndices[lowIndex];
+				//print #representatives[1], #representatives[2], #representatives[3];
+				//print orientability[lowIndex];
+				//print lowIndex;
 				if orientability[lowIndex][facetIndex] then
 					//Calculate relative orientation
 					facetBasis := formBasis(facet); //Fixes an orientation of the vector space spanned by vertices of the facet
@@ -233,6 +235,7 @@ function chainMap(cells, representatives, orientability, equivalenceIndices, equ
 					
 					M := MatrixRing(Rationals(), #repBasis) ! linearCombinations(repBasis, [Dagger(equivalenceWitnesses[lowIndex][lowCellIndex]) * form * equivalenceWitnesses[lowIndex][lowCellIndex] : form in facetBasis]);
 					orientationCompatibility := Sign(Determinant(M));
+					//bug: orientationCompatibility is not being calculated correctly? or consistently?
 					
 					//Contribution to cochain map
 					orientationMatrix[i][facetIndex] +:= relativeOrientation * orientationCompatibility;
